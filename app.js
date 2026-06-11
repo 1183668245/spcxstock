@@ -506,6 +506,7 @@
 
   function fmtRemain(ts) { const r = Math.max(0, ts - Math.floor(Date.now() / 1000)); const h = Math.floor(r / 3600), m = Math.floor((r % 3600) / 60), s = r % 60; return `${h}h ${m}m ${s}s`; }
   function formatInteger(value) { return String(value ?? 0).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  function toBigIntSafe(value) { return typeof value === "bigint" ? value : BigInt(value ?? 0); }
   function getSortedLegions() { return [...(state.publicData.legions || [])].sort((a, b) => a.heat === b.heat ? a.legionId - b.legionId : b.heat > a.heat ? 1 : -1); }
   function pctFromHeat(heat, maxHeat) {
     if (!maxHeat || maxHeat <= 0n) return 0;
@@ -960,15 +961,20 @@
         state.readToken.balanceOf(state.userAddress)
       ]);
       const now = BigInt(Math.floor(Date.now() / 1000));
-      const meetsHoldingNow = balance >= MIN_HOLDING_TOKEN;
-      const memberAmount = !seasonUser.claimed && seasonUser.qualifiedWeightedContribution > 0n && seasonLegion.qualifiedWeight > 0n
-        ? (seasonLegion.memberRewardPool * seasonUser.qualifiedWeightedContribution) / seasonLegion.qualifiedWeight
+      const qualifiedWeighted = toBigIntSafe(seasonUser?.qualifiedWeightedContribution);
+      const qualifiedWeight = toBigIntSafe(seasonLegion?.qualifiedWeight);
+      const memberRewardPool = toBigIntSafe(seasonLegion?.memberRewardPool);
+      const leaderRewardAmount = toBigIntSafe(seasonLegion?.leaderRewardAmount);
+      const claimDeadline = toBigIntSafe(seasonState?.claimDeadline);
+      const meetsHoldingNow = toBigIntSafe(balance) >= MIN_HOLDING_TOKEN;
+      const memberAmount = !Boolean(seasonUser?.claimed) && qualifiedWeighted > 0n && qualifiedWeight > 0n
+        ? (memberRewardPool * qualifiedWeighted) / qualifiedWeight
         : 0n;
-      const isLeader = Boolean(seasonLegion.leaderEligible && seasonLegion.leaderAtLock && String(seasonLegion.leaderAtLock).toLowerCase() === state.userAddress.toLowerCase());
-      const leaderAmount = !seasonUser.leaderClaimed && isLeader ? seasonLegion.leaderRewardAmount : 0n;
-      const expired = Boolean(seasonState.settled && BigInt(seasonState.claimDeadline || 0) > 0n && now > BigInt(seasonState.claimDeadline));
-      const claimable = seasonState.settled && !expired && meetsHoldingNow ? memberAmount + leaderAmount : 0n;
-      state.rewardPreview = { claimable, memberAmount, leaderAmount, expired, meetsHoldingNow, alreadyClaimed: claimable === 0n && Boolean(seasonUser.claimed || seasonUser.leaderClaimed), settled: Boolean(seasonState.settled) };
+      const isLeader = Boolean(seasonLegion?.leaderEligible && seasonLegion?.leaderAtLock && String(seasonLegion.leaderAtLock).toLowerCase() === state.userAddress.toLowerCase());
+      const leaderAmount = !Boolean(seasonUser?.leaderClaimed) && isLeader ? leaderRewardAmount : 0n;
+      const expired = Boolean(seasonState?.settled && claimDeadline > 0n && now > claimDeadline);
+      const claimable = Boolean(seasonState?.settled) && !expired && meetsHoldingNow ? memberAmount + leaderAmount : 0n;
+      state.rewardPreview = { claimable, memberAmount, leaderAmount, expired, meetsHoldingNow, alreadyClaimed: claimable === 0n && Boolean(seasonUser?.claimed || seasonUser?.leaderClaimed), settled: Boolean(seasonState?.settled) };
       renderRewardResult(sid, lid);
     } catch (error) {
       const msg = parseError(error);
