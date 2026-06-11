@@ -78,45 +78,12 @@
     openModal(
       "配置合约地址",
       `
-      <p class="section-text">当前未配置、配置无效，或 Vault 合约版本与前端不匹配，前端无法读取链上数据或发送交易。</p>
-      <div class="rule-list">
-        <p class="subtle">你也可以通过 URL 参数配置：?vault=0x...&token=0x...&factory=0x...&rpc=https://...</p>
-        <p class="subtle">填入 Factory 地址后，前端可自动从事件中选择该 Token 最新创建的 Vault。</p>
-      </div>
-      <div class="modal-grid">
-        <div class="metric-card">
-          <span>Vault 地址</span>
-          <input id="cfgVault" class="text-input" placeholder="0x..." value="${trimOrEmpty(CONFIG.vaultAddress)}" />
-        </div>
-        <div class="metric-card">
-          <span>Token 地址</span>
-          <input id="cfgToken" class="text-input" placeholder="0x..." value="${trimOrEmpty(CONFIG.tokenAddress)}" />
-        </div>
-        <div class="metric-card">
-          <span>RPC（可选）</span>
-          <input id="cfgRpc" class="text-input" placeholder="https://..." value="${trimOrEmpty(CONFIG.rpcUrl)}" />
-        </div>
-      </div>
+      <p class="section-text">请等待代币绑定网站后进行游戏，当前未绑定。</p>
       <div class="inline-actions">
-        <button id="cfgSaveBtn" class="primary-btn">保存并刷新</button>
-        <button id="cfgCancelBtn" class="ghost-btn">稍后再说</button>
+        <button id="cfgCancelBtn" class="primary-btn">知道了</button>
       </div>
     `
     );
-
-    document.getElementById("cfgSaveBtn")?.addEventListener("click", () => {
-      const vaultAddress = trimOrEmpty(document.getElementById("cfgVault")?.value);
-      const tokenAddress = trimOrEmpty(document.getElementById("cfgToken")?.value);
-      const rpcUrl = trimOrEmpty(document.getElementById("cfgRpc")?.value);
-
-      if (!isValidAddress(vaultAddress) || !isValidAddress(tokenAddress)) {
-        showToast("请填写有效的 Vault / Token 地址", "error");
-        return;
-      }
-
-      saveConfig({ vaultAddress, tokenAddress, rpcUrl });
-      window.location.reload();
-    });
 
     document.getElementById("cfgCancelBtn")?.addEventListener("click", closeModal);
   }
