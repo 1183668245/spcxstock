@@ -10,8 +10,8 @@
     rpcUrl: DEFAULT_TESTNET_RPC,
     explorer: "https://bscscan.com",
     factoryAddress: "0x19d44C65380b855d70647D515cDfD66CB928eB16",
-    vaultAddress: "",
-    tokenAddress: "",
+    vaultAddress: "0x059C9d71E1555EcC2b846bB36897837B26c975c2",
+    tokenAddress: "0xed4da0e20222444ccd83fc6a669af8c4d6fd7777",
   };
 
   const CONFIG_STORAGE_KEY = `spp:config:${CONFIG.chainId}`;
